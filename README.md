@@ -23,18 +23,12 @@ The `atr` package is built on top of [JAX](https://jax.readthedocs.io/en/latest/
 ## Adiabatic transport for excited state calculations
 
 The main feature of the `atr` package is adiabatic transport of NQS. Adiabatic transport is performed using a modified version of the *shift-and-invert* or the *inverse power iteration* (IPI) algorithm. This allows us to efficiently compute the ground state energy and wavefunction at each point in the $\lambda$ parameter space. In the hilbert space, the algorithm iterates the following transformation:
-$$
-\vert \Psi ' \rangle \propto ( H - \omega )^{-1} \vert {\Psi} \rangle
-$$
+$$ \vert \Psi ' \rangle \propto ( H - \omega )^{-1} \vert {\Psi} \rangle $$
 where $\omega$ is the target energy. This transformation amplifies the component of the wavefunction corresponding to the eigenvalue closest to $\omega$, allowing us to converge to the desired excited state.
 
 For the NQS implementation, we it can be shown that the parameter update $\delta \theta$ reflecting one IPI step is given by $\mathbf{G} \delta \theta = - f$ where
-$$
-\mathbf{G} _{\mu \nu} = 2 \Re \langle \partial _\mu \Psi _\theta \vert ( H_\lambda - \omega_\lambda ) \vert \partial _\nu \Psi _\theta \rangle
-$$
-$$
-f _\mu = 2 \Re \langle \partial _\mu \Psi _\theta \vert H_\lambda \vert \Psi _\theta \rangle
-$$
+$$ \mathbf{G} _{\mu \nu} = 2 \Re \langle \partial _\mu \Psi _\theta \vert ( H_\lambda - \omega_\lambda ) \vert \partial _\nu \Psi _\theta \rangle $$
+$$ f _\mu = 2 \Re \langle \partial _\mu \Psi _\theta \vert H_\lambda \vert \Psi _\theta \rangle $$
 
 The function `inverse_power_update` calculates precisely this $\delta \theta$ update. New parameters are then given by $\theta \leftarrow \theta + \eta \delta \theta$ with some *dampening* factor $\eta$.
 
