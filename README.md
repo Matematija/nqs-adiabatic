@@ -24,7 +24,7 @@ The `atr` package is built on top of [JAX](https://jax.readthedocs.io/en/latest/
 
 The main feature of the `atr` package is adiabatic transport of NQS. Adiabatic transport is performed using a modified version of the *shift-and-invert* or the *inverse power iteration* (IPI) algorithm. This allows us to efficiently compute the ground state energy and wavefunction at each point in the $\lambda$ parameter space. In the hilbert space, the algorithm iterates the following transformation:
 $$
-\left| {\Psi '} \right\rangle \propto \left( H - \omega \right)^{-1} \left| {\Psi} \right\rangle
+| {\Psi '} \rangle \propto ( H - \omega )^{-1} | {\Psi} \rangle
 $$
 where $\omega$ is the target energy. This transformation amplifies the component of the wavefunction corresponding to the eigenvalue closest to $\omega$, allowing us to converge to the desired excited state.
 
