@@ -28,15 +28,15 @@ $$
 $$
 where $\omega$ is the target energy. This transformation amplifies the component of the wavefunction corresponding to the eigenvalue closest to $\omega$, allowing us to converge to the desired excited state.
 
-For the NQS implementation, we it can be shown that the parameter update $\delta \theta$ reflecting one IPI step is given by $\mathbf{G} \; \delta \theta = - f$ where
+For the NQS implementation, we it can be shown that the parameter update $\delta \theta$ reflecting one IPI step is given by $\mathbf{G} \delta \theta = - f$ where
 $$
-\mathbf{G} _{\mu \nu} = 2 \Re \langle \partial _\mu \Psi _\theta \vert \left( H_\lambda - \omega_\lambda \right) \vert \partial _\nu \Psi _\theta \rangle
+\mathbf{G} _{\mu \nu} = 2 \Re \langle \partial _\mu \Psi _\theta \vert ( H_\lambda - \omega_\lambda ) \vert \partial _\nu \Psi _\theta \rangle
 $$
 $$
-f _\mu = 2 \text{Re} \left\langle \partial _\mu \Psi _\theta \right| H_\lambda \left| \Psi _\theta \right\rangle
+f _\mu = 2 \Re \langle \partial _\mu \Psi _\theta \vert H_\lambda \vert \Psi _\theta \rangle
 $$
 
-The function `inverse_power_update` calculates precisely this $\delta \theta$ update. New parameters are then given by $\theta \leftarrow \theta + \eta \; \delta \theta$ with some *dampening* factor $\eta$.
+The function `inverse_power_update` calculates precisely this $\delta \theta$ update. New parameters are then given by $\theta \leftarrow \theta + \eta \delta \theta$ with some *dampening* factor $\eta$.
 
 A complete example is available in the `examples/transport.ipynb` notebook. The main steps are as follows:
 
