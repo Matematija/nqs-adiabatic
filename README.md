@@ -29,12 +29,9 @@ $$ \vert \Psi^\prime \rangle \propto (H - \omega )^{-1} \vert \Psi \rangle $$
 where $\omega$ is the target energy. This transformation amplifies the component of the wavefunction corresponding to the eigenvalue closest to $\omega$, allowing us to converge to the desired excited state.
 
 For the NQS implementation, we it can be shown that the parameter update $\delta \theta$ reflecting one IPI step is given by $\mathbf{G} \delta \theta = - f$ where
-$$
-\mathbf{G}_{\mu \nu} = 2 \text{Re} \langle \partial_{\mu} \Psi_{\theta} \vert ( H_{\lambda} - {\omega}_{\lambda} ) \vert {\partial}_{\nu} \Psi_{\theta} \rangle
-$$
-$$
-f_\mu = 2 \text{Re} \langle \partial_{\mu} \Psi_{\theta} \vert H_{\lambda} \vert \Psi_{\theta} \rangle
-$$
+$$ \mathbf{G}_{\mu \nu} = 2 \text{Re} \langle \partial_{\mu} \Psi_{\theta} \vert ( H_{\lambda} - {\omega}_{\lambda} ) \vert {\partial}_{\nu} \Psi_{\theta} \rangle $$
+
+$$ f_\mu = 2 \text{Re} \langle \partial_{\mu} \Psi_{\theta} \vert H_{\lambda} \vert \Psi_{\theta} \rangle $$
 
 The function `inverse_power_update` calculates precisely this $\delta \theta$ update. New parameters are then given by $\theta \leftarrow \theta + \eta \delta \theta$ with some *dampening* factor $\eta$.
 
