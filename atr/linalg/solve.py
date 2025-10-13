@@ -91,8 +91,6 @@ def inv_smooth(s: Array, rcond: Scalar, acond: Scalar) -> Array:
 
     acond = jnp.maximum(acond, eps)
     cutoff = jnp.maximum(acond, rcond * s.max())
-    s_inv_safe = jnp.where(s > eps, 1 / s, 0.0)
-
     reg = jnp.reciprocal(1.0 + (cutoff / s) ** 6)
     s_inv_safe = jnp.where(s > eps, 1 / s, 0.0)
 
