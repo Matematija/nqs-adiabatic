@@ -2,7 +2,7 @@
 
 Research code for adiabatic transport of neural-network quantum states. This code is attached to the following publication:
 
-**Adiabatic transport of neural network quantum states** ([arXiv:FILL-IN](https://arxiv.org/abs/FILL-IN)).
+**Adiabatic transport of neural network quantum states** ([arXiv:2510.15030](https://arxiv.org/abs/2510.15030)).
 
 Code authors: Matija Medvidović and Alev Orfi
 
