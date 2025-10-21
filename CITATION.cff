@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: nqs-adiabatic
+title: Adiabatic Transport
 message: >-
   Research code for adiabatic transport of neural-network
   quantum states.
