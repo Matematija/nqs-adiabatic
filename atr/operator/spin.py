@@ -116,13 +116,14 @@ def conn_xx(graph: Graph, x: Array) -> MatrixElements:
 
     conn = jax.vmap(lambda edge: x_.at[edge].mul(-1))(graph.edges)
     conn = conn.reshape(graph.num_edges, *x.shape)
-    mels = jnp.ones(graph.num_edges)
+    mels = graph.edge_weights
 
     return MatrixElements(conn, mels)
 
 
 def conn_zz(graph: Graph, x: Array) -> MatrixElements:
-    edge_total = jnp.ravel(x)[graph.edges].prod(axis=-1).sum()
+    edge_products = jnp.ravel(x)[graph.edges].prod(axis=-1)
+    edge_total = graph.edge_weights @ edge_products
     return MatrixElements(x[None, ...], edge_total[None])
 
 
