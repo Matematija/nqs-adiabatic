@@ -1,3 +1,4 @@
+from typing import Sequence
 from math import prod
 
 from jax import numpy as jnp
@@ -67,7 +68,7 @@ class Graph(eqx.Module):
 
 
 @eqx.filter_jit
-def _cube_edges_and_weights(shape: tuple, bc: tuple[str, ...]) -> tuple[Array, Array]:
+def _cube_edges_and_weights(shape: tuple, bc: str) -> tuple[Array, Array]:
 
     num_nodes = prod(shape)
     idx = jnp.arange(num_nodes).reshape(shape)
@@ -104,20 +105,25 @@ def _cube_edges_and_weights(shape: tuple, bc: tuple[str, ...]) -> tuple[Array, A
     return edges, edge_weights
 
 
+def _parse_bc(bc: str | Sequence[str], ndim: int) -> str:
+    if not isinstance(bc, str):
+        bc = "".join(bc)
+
+    bc = bc.lower()
+    return bc + bc[-1] * (ndim - len(bc))
+
+
 class Cube(Graph):
 
     shape: tuple[int, ...] = eqx.field(static=True)
-    bc: tuple[str, ...] = eqx.field(static=True)
+    bc: str = eqx.field(static=True)
 
     def __init__(self, shape: int | tuple, bc: str | tuple[str, ...] = "p"):
 
         if isinstance(shape, int):
             shape = (shape,)
 
-        if isinstance(bc, str):
-            bc = (bc,) * len(shape)
-
-        bc = tuple(val.lower() for val in bc)
+        bc = _parse_bc(bc, len(shape))
 
         if len(bc) != len(shape):
             raise ValueError(f"bc must have length {len(shape)}, got {len(bc)}.")

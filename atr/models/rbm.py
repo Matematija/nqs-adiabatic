@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Sequence
 
 import jax
 from jax import numpy as jnp
@@ -8,7 +8,7 @@ from jax import Array
 import equinox as eqx
 from equinox import nn
 
-from .base import Linear, Conv, FFTConv, Activation
+from .base import Linear, Conv, Activation
 from .utils import real_params
 from ..utils import Key, DType, Shape, default_complex_dtype
 
@@ -76,7 +76,7 @@ class ConvRBM(eqx.Module):
         self,
         dims: int | Shape,
         n_channels: int = 4,
-        pbc: bool = True,
+        bc: str | Sequence[str] = "p",
         use_bias: bool = True,
         activation: Activation = log_cosh,
         *,
@@ -84,20 +84,23 @@ class ConvRBM(eqx.Module):
     ):
 
         self.activation = activation
-        out_dtype = default_complex_dtype()
+        num_spatial_dims = len(dims) if not isinstance(dims, int) else 1
+        dtype = default_complex_dtype()
 
-        self.conv = FFTConv(
-            dims,
+        self.conv = Conv(
+            num_spatial_dims,
             in_channels=1,
             out_channels=n_channels,
-            pbc=pbc,
+            kernel_size=dims,
+            bc=bc,
             use_bias=use_bias,
-            out_dtype=out_dtype,
+            dtype=dtype,
             key=key,
         )
 
     def __call__(self, x: Array) -> Array:
-        return self.activation(self.conv(x[None, ...])).sum()
+        x = x[None, ...].astype(default_complex_dtype())
+        return self.activation(self.conv(x)).sum()
 
 
 ####################################################################################################
@@ -126,8 +129,8 @@ class SpinEmbedding(eqx.Module):
 
 class ResidualBlock(eqx.Module):
 
-    conv1: nn.Conv
-    conv2: nn.Conv
+    conv1: Conv
+    conv2: Conv
     norm: nn.LayerNorm | nn.Identity
     activation: Activation
 
@@ -136,7 +139,7 @@ class ResidualBlock(eqx.Module):
         dims: int | Shape,
         n_channels: int,
         kernel_size: int | Shape = 3,
-        pbc: bool = True,
+        bc: str | Sequence[str] = "p",
         enhancement: float = 2.0,
         activation: Activation = jax.nn.silu,
         use_bias: bool = True,
@@ -149,15 +152,13 @@ class ResidualBlock(eqx.Module):
         num_spatial_dims = len(dims) if not isinstance(dims, int) else 1
         mid_channels = int(enhancement * n_channels)
         self.activation = activation
-        padding_mode = "CIRCULAR" if pbc else "ZEROS"
 
-        make_conv = lambda in_features, out_features, key: nn.Conv(
+        make_conv = lambda in_features, out_features, key: Conv(
             num_spatial_dims,
             in_features,
             out_features,
             kernel_size,
-            padding="SAME",
-            padding_mode=padding_mode,
+            bc=bc,
             use_bias=use_bias,
             key=key,
         )
@@ -184,7 +185,7 @@ class ResidualEncoder(eqx.Module):
         n_channels: int,
         n_blocks: int = 1,
         kernel_size: int | Shape = 3,
-        pbc: bool = True,
+        bc: str | Sequence[str] = "p",
         enhancement: float = 2.0,
         activation: Callable = jax.nn.silu,
         use_norms: bool = True,
@@ -199,7 +200,7 @@ class ResidualEncoder(eqx.Module):
             dims,
             n_channels,
             kernel_size=kernel_size,
-            pbc=pbc,
+            bc=bc,
             enhancement=enhancement,
             activation=activation,
             norm=use_norms,
@@ -232,38 +233,43 @@ class RBMHead(eqx.Module):
         self,
         dims: int | Shape,
         n_hidden_channels: int,
-        pbc: bool = True,
+        bc: str | Sequence[str] = "p",
         use_bias: bool = True,
         *,
         key: Key,
     ):
 
         key, skip_key = jax.random.split(key, 2)
-        out_dtype = default_complex_dtype()
+        dtype = default_complex_dtype()
 
-        self.conv = FFTConv(
-            dims,
+        num_spatial_dims = len(dims) if not isinstance(dims, int) else 1
+
+        self.conv = Conv(
+            num_spatial_dims,
             n_hidden_channels,
             n_hidden_channels,
-            pbc=pbc,
-            out_dtype=out_dtype,
+            kernel_size=dims,
+            bc=bc,
+            dtype=dtype,
             use_bias=False,
             key=key,
         )
 
-        self.skip_conv = FFTConv(
-            dims,
+        self.skip_conv = Conv(
+            num_spatial_dims,
             in_channels=1,
             out_channels=n_hidden_channels,
-            pbc=pbc,
-            out_dtype=out_dtype,
+            kernel_size=dims,
+            bc=bc,
+            dtype=dtype,
             use_bias=use_bias,
             key=skip_key,
         )
 
     def __call__(self, x: Array, h: Array) -> Array:
-        x_ = self.skip_conv(x[None, ...])
-        h_ = self.conv(h)
+        dtype = default_complex_dtype()
+        x_ = self.skip_conv(x[None, ...].astype(dtype))
+        h_ = self.conv(h.astype(dtype))
         return log_cosh(x_ + h_).mean(axis=0).sum()
 
 
@@ -278,7 +284,7 @@ class ResidualRBM(eqx.Module):
         n_channels: int,
         n_blocks: int = 1,
         kernel_size: int | Shape = 3,
-        pbc: bool = True,
+        bc: str | Sequence[str] = "p",
         enhancement: float = 2.0,
         activation: Callable = jax.nn.silu,
         use_norms: bool = True,
@@ -294,7 +300,7 @@ class ResidualRBM(eqx.Module):
             n_channels,
             n_blocks=n_blocks,
             kernel_size=kernel_size,
-            pbc=pbc,
+            bc=bc,
             enhancement=enhancement,
             activation=activation,
             use_norms=use_norms,
@@ -302,7 +308,9 @@ class ResidualRBM(eqx.Module):
             key=encoder_key,
         )
 
-        self.proj = RBMHead(dims, n_hidden_channels=n_channels, use_bias=use_bias, key=proj_key)
+        self.proj = RBMHead(
+            dims, n_hidden_channels=n_channels, bc=bc, use_bias=use_bias, key=proj_key
+        )
 
     def __call__(self, x: Array) -> Array:
         return self.proj(x, self.encoder(x))
